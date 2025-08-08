@@ -17,7 +17,7 @@ http://localhost:3000
 npm run dev
 
 git add .
-git commit -m "체크포인트"
+git commit -m "체크포인트1"
 git push origin main
 
 다른 컴퓨터에서 커밋을 완료했고
