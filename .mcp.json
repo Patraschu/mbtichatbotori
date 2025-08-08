@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "C:\\Users\\lostg\\AppData\\Roaming\\npm\\node_modules\\@modelcontextprotocol\\server-sequential-thinking\\dist\\index.js"
+      ],
+      "env": {}
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "G:\\python\\mbtichatbot\\node_modules\\@modelcontextprotocol\\server-memory\\dist\\index.js"
+      ],
+      "env": {}
+    },
+    "upstash-context-7-mcp": {
+      "type": "http",
+      "url": "https://server.smithery.ai/@upstash/context7-mcp/mcp?api_key=6862c7ba-d5b1-4f4e-a1f9-4232927f0b2c&profile=proud-cardinal-nDC9z9"
+    }
+  }
+}

@@ -1,0 +1,56 @@
+# dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# vite
+server/public
+vite.config.ts.*
+
+# archives
+*.tar.gz
+
+# claude
+.claude/settings.local.json
+
+# credentials
+google-credentials.json
+.vercel
+
+.env*.local
+.vercel
+
+# YoYo AI version control directory
+.yoyo/

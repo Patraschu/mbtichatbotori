@@ -1,0 +1,281 @@
+================================================================================
+                    Windows MCP 설치 가이드 (상세 버전)
+================================================================================
+
+📌 이 가이드는 Windows 10/11 사용자를 위한 MCP 설치 가이드입니다.
+
+================================================================================
+1. 사전 준비사항
+================================================================================
+
+1-1. Node.js 설치 확인
+-------------------------
+# PowerShell 또는 CMD에서 실행
+node --version
+npm --version
+
+# 설치되어 있지 않다면:
+# https://nodejs.org/ 에서 LTS 버전 다운로드 및 설치
+
+1-2. Claude Desktop 설치
+-------------------------
+# https://claude.ai/download 에서 다운로드
+# 설치 후 계정 로그인
+
+1-3. PowerShell 실행 정책 설정
+-------------------------
+# PowerShell을 관리자 권한으로 실행
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+================================================================================
+2. MCP 서버 설치 방법
+================================================================================
+
+방법 1: 프로젝트별 설정 (.mcp.json 사용) - 권장
+----------------------------------------------
+
+2-1. 프로젝트 폴더로 이동
+-------------------------
+cd G:\python\mbtichatbot
+
+2-2. Sequential Thinking 설치 (전역)
+------------------------------------
+npm install -g @modelcontextprotocol/server-sequential-thinking
+
+# 설치 경로 확인
+npm root -g
+# 결과 예시: C:\Users\사용자명\AppData\Roaming\npm\node_modules
+
+2-3. Memory Server 설치 (프로젝트 로컬)
+---------------------------------------
+npm install @modelcontextprotocol/server-memory
+
+2-4. .mcp.json 파일 생성
+------------------------
+# 프로젝트 루트에 .mcp.json 파일 생성
+# 메모장이나 VS Code로 다음 내용 작성:
+
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "C:\\Users\\사용자명\\AppData\\Roaming\\npm\\node_modules\\@modelcontextprotocol\\server-sequential-thinking\\dist\\index.js"
+      ],
+      "env": {}
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "G:\\python\\mbtichatbot\\node_modules\\@modelcontextprotocol\\server-memory\\dist\\index.js"
+      ],
+      "env": {}
+    }
+  }
+}
+
+⚠️ 중요: "사용자명" 부분을 실제 Windows 사용자명으로 변경하세요!
+
+2-5. Claude Desktop 재시작
+--------------------------
+1. Claude Desktop 완전 종료
+2. 작업 표시줄 시스템 트레이에서도 종료 확인
+3. Claude Desktop 다시 실행
+4. 프로젝트 폴더에서 대화 시작
+
+================================================================================
+방법 2: 전역 설정 (claude_desktop_config.json 사용)
+================================================================================
+
+3-1. 설정 파일 위치 찾기
+------------------------
+# PowerShell에서 실행
+echo "$env:APPDATA\claude-desktop"
+# 결과 예시: C:\Users\사용자명\AppData\Roaming\claude-desktop
+
+3-2. 설정 파일 생성/편집
+------------------------
+# 위 경로에 claude_desktop_config.json 파일 생성
+# 내용은 위의 .mcp.json과 동일한 형식
+
+================================================================================
+3. 설치 확인 및 테스트
+================================================================================
+
+3-1. MCP 서버 목록 확인
+-----------------------
+Claude Desktop에서 입력:
+/mcp
+
+# 정상 출력 예시:
+# Connected MCP servers:
+# - sequential-thinking
+# - memory
+
+3-2. Sequential Thinking 테스트
+-------------------------------
+Claude Desktop에서 입력:
+"ultrathink를 사용해서 2+2를 계산해줘"
+
+3-3. Memory Server 테스트
+-------------------------
+Claude Desktop에서 입력:
+"테스트 정보를 knowledge graph에 저장해줘"
+
+================================================================================
+4. 문제 해결
+================================================================================
+
+문제 1: "No MCP servers configured"
+-----------------------------------
+원인: 설정 파일이 없거나 잘못된 위치
+해결:
+1. .mcp.json이 프로젝트 루트에 있는지 확인
+2. Claude를 프로젝트 폴더에서 실행했는지 확인
+3. JSON 문법 오류 확인 (쉼표, 따옴표 등)
+
+문제 2: "Command not found"
+---------------------------
+원인: Node.js 경로 문제
+해결:
+# CMD에서 node 경로 확인
+where node
+# 결과를 .mcp.json의 command에 전체 경로로 입력
+
+예시:
+"command": "C:\\Program Files\\nodejs\\node.exe"
+
+문제 3: 경로 관련 오류
+---------------------
+Windows 경로 작성 방법:
+1. 백슬래시 두 개 사용: C:\\Users\\사용자명\\...
+2. 또는 슬래시 사용: C:/Users/사용자명/...
+
+문제 4: 권한 오류
+-----------------
+해결:
+1. PowerShell을 관리자 권한으로 실행
+2. npm 캐시 정리: npm cache clean --force
+3. 재설치 시도
+
+================================================================================
+5. 유용한 PowerShell 스크립트
+================================================================================
+
+5-1. MCP 자동 설치 스크립트
+---------------------------
+# install-mcp.ps1 파일로 저장
+
+$projectPath = Get-Location
+Write-Host "프로젝트 경로: $projectPath" -ForegroundColor Green
+
+# Sequential Thinking 설치
+Write-Host "Sequential Thinking 설치 중..." -ForegroundColor Yellow
+npm install -g @modelcontextprotocol/server-sequential-thinking
+
+# Memory Server 설치
+Write-Host "Memory Server 설치 중..." -ForegroundColor Yellow
+npm install @modelcontextprotocol/server-memory
+
+# .mcp.json 생성
+$username = $env:USERNAME
+$globalModules = npm root -g
+$config = @{
+    mcpServers = @{
+        "sequential-thinking" = @{
+            type = "stdio"
+            command = "node"
+            args = @("$globalModules\@modelcontextprotocol\server-sequential-thinking\dist\index.js")
+            env = @{}
+        }
+        memory = @{
+            type = "stdio"
+            command = "node"  
+            args = @("$projectPath\node_modules\@modelcontextprotocol\server-memory\dist\index.js")
+            env = @{}
+        }
+    }
+} | ConvertTo-Json -Depth 10
+
+$config | Out-File -FilePath ".mcp.json" -Encoding utf8
+Write-Host "설치 완료! Claude Desktop을 재시작하세요." -ForegroundColor Green
+
+# 스크립트 실행:
+# .\install-mcp.ps1
+
+================================================================================
+6. 추가 MCP 서버 설치
+================================================================================
+
+6-1. Filesystem MCP
+-------------------
+npm install @modelcontextprotocol/server-filesystem
+
+# .mcp.json에 추가:
+"filesystem": {
+  "type": "stdio",
+  "command": "node",
+  "args": ["./node_modules/@modelcontextprotocol/server-filesystem/dist/index.js"],
+  "env": {
+    "ALLOWED_DIRECTORIES": "G:\\python\\mbtichatbot"
+  }
+}
+
+6-2. Git MCP
+------------
+npm install @modelcontextprotocol/server-git
+
+# .mcp.json에 추가:
+"git": {
+  "type": "stdio",
+  "command": "node",
+  "args": ["./node_modules/@modelcontextprotocol/server-git/dist/index.js"],
+  "env": {
+    "GIT_ROOT": "G:\\python\\mbtichatbot"
+  }
+}
+
+================================================================================
+7. 팁과 요령
+================================================================================
+
+7-1. 여러 프로젝트 관리
+-----------------------
+- 각 프로젝트마다 .mcp.json 파일 생성
+- 프로젝트별로 다른 MCP 구성 가능
+
+7-2. 팀 협업
+------------
+- .mcp.json을 Git에 포함
+- 경로는 상대 경로 사용 권장
+
+7-3. 디버깅
+-----------
+# MCP 서버 직접 실행해서 테스트
+node "C:\Users\사용자명\AppData\Roaming\npm\node_modules\@modelcontextprotocol\server-sequential-thinking\dist\index.js"
+
+7-4. 업데이트
+-------------
+# MCP 서버 업데이트
+npm update -g @modelcontextprotocol/server-sequential-thinking
+npm update @modelcontextprotocol/server-memory
+
+================================================================================
+8. 자주 묻는 질문
+================================================================================
+
+Q: .mcp.json vs claude_desktop_config.json 차이점?
+A: .mcp.json은 프로젝트별, claude_desktop_config.json은 전역 설정
+
+Q: MCP 서버가 느려요
+A: 첫 실행 시 초기화 시간이 필요합니다. 2-3초 기다려보세요.
+
+Q: 한글 경로에서 오류가 나요
+A: 가능하면 영문 경로 사용을 권장합니다.
+
+================================================================================
+작성일: 2025-01-28
+Windows 10/11, Node.js v18+, Claude Desktop 최신 버전 기준
+================================================================================

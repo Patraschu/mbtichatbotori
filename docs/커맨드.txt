@@ -1,0 +1,118 @@
+vercel login	Vercel 계정(GitHub 등)으로 로그인
+vercel logout	Vercel CLI 세션 로그아웃
+vercel 또는 vercel deploy	현재 디렉터리를 Vercel에 배포 (첫 배포 시 alias·프로젝트 설정 묻기)
+vercel --prod	프로덕션 환경으로 강제 배포
+vercel dev	로컬에서 Vercel 플랫폼(Functions 포함) 에뮬레이션 개발 서버 실행
+vercel env ls	프로젝트에 설정된 환경 변수 목록 확인
+vercel env add <키> <값>	Vercel 프로젝트에 환경 변수 추가
+vercel env pull	원격 환경 변수를 .env.local로 동기화
+vercel alias	배포된 URL에 커스텀 도메인(alias) 연결/해제
+vercel logs <배포URL>	지정된 배포(Functions)의 로그 실시간 스트리밍
+vercel projects ls	Vercel 계정의 프로젝트 목록 조회
+vercel whoami	현재 로그인된 Vercel 사용자 정보 출력
+vercel help	CLI 사용법 & 모든 명령어 목록 확인
+
+http://localhost:3000
+
+npm run dev
+
+git add .
+git commit -m "체크포인트"
+git push origin main
+
+다른 컴퓨터에서 커밋을 완료했고
+불러오려면
+git checkout main
+git pull origin main
+
+# 1. 최신 main 브랜치에서 시작
+git switch main
+git pull origin main
+
+# 2. 새로운 작업 브랜치 생성 및 이동
+git switch -c test
+
+# 3. 코드 작업 후 커밋
+git add .
+git commit -m "작업 내용 요약"
+
+# 4. 원격 저장소에 작업 브랜치 푸시
+git push origin test
+
+# 5. (GitHub 웹사이트에서 Pull Request 생성 및 Merge 진행)
+
+# 6. 작업 완료 후 로컬 환경 정리
+git switch main
+git pull origin main
+git branch -d test
+
+
+충돌 확인
+git status
+
+충돌된 파일 수정 후
+git add "커맨드.txt"
+
+add가 끝나면 리베이스
+git fetch origin
+git checkout main
+git rebase origin/main
+
+npm install next react react-dom
+npm install
+npm install xlsx
+npm install feed
+npm run build
+
+엑셀 회차 업데이트했으면
+node scripts/convert-excel.mjs
+npm run convert
+
+
+https://nerdopower.com/sitemap.xml
+https://nerdopower.com/rss.xml
+https://nerdopower.com/live
+https://nerdopower.com/stats
+https://nerdopower.com/report
+https://nerdopower.com/notices
+https://nerdopower.com/combination-calculator
+
+Vercel 명령어
+vercel login       : Vercel CLI에 로그인합니다. (최초 1회 필요)
+vercel deploy      : 현재 디렉터리의 프로젝트를 Vercel에 배포합니다. (Git 연동 시 ‘vercel’만 입력)
+vercel dev         : 로컬에서 Vercel 환경과 동일하게 개발 서버를 실행합니다.
+vercel logout      : Vercel CLI에서 로그아웃합니다.
+vercel env pull .env.local
+
+npm 명령어
+npm init -y        : 빈 폴더에 package.json 파일을 생성합니다.
+npm install <패키지> : 지정한 패키지를 프로젝트의 node_modules에 설치합니다.
+npm install -g <패키지> : 지정한 패키지를 전역(Global)으로 설치합니다.
+npm run dev        : package.json의 dev 스크립트를 실행합니다. (보통 next dev)
+npm run build      : package.json의 build 스크립트를 실행합니다. (보통 next build)
+npm start          : package.json의 start 스크립트를 실행합니다. (보통 production 서버 구동)
+
+Git 명령어
+git init           : 현재 폴더를 Git 저장소로 초기화합니다.
+git clone <URL>    : 원격 저장소를 로컬에 복제(Clone)합니다.
+git clone https://github.com/Patraschu/nerdopower.git
+git status         : 워킹 디렉터리의 변경 사항을 확인합니다.
+git add .          : 변경된 모든 파일을 스테이징(Stage)합니다.
+git commit -m "메시지" : 스테이징된 변경 사항을 커밋합니다.
+git push           : 로컬 커밋을 원격 저장소에 푸시합니다.
+git pull origin main          : 원격 저장소의 변경 사항을 로컬로 가져와 병합합니다.
+git branch         : 로컬에 존재하는 브랜치 목록을 확인합니다.
+git checkout <브랜치명> : 지정한 브랜치로 이동합니다. (옵션 -b로 새 브랜치 생성)
+git merge <브랜치명> : 현재 브랜치에 다른 브랜치의 변경 사항을 병합합니다.
+git log            : 커밋 히스토리를 조회합니다.
+
+
+npx create-next-app .
+
+npx prisma generate
+npx prisma studio
+
+npm run rss
+npx next-sitemap
+
+http://localhost:5555

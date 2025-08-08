@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--secondary));
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+  
+  /* Kakao-style chat container */
+  .chat-container {
+    @apply h-screen flex flex-col bg-[#B2C7D9];
+  }
+  
+  /* Glass morphism header */
+  .glass-header {
+    @apply bg-white/80 backdrop-blur-lg shadow-sm;
+  }
+  
+  /* Chat header */
+  .chat-header {
+    @apply bg-[#ABC3DA] flex items-center justify-between px-4 py-3 shadow-sm;
+  }
+  
+  /* Chat messages area */
+  .chat-messages {
+    @apply flex-1 overflow-y-auto p-4 space-y-4;
+  }
+  
+  /* Chat input container */
+  .chat-input-container {
+    @apply bg-white p-3 flex items-end gap-2 border-t border-gray-200;
+  }
+  
+  /* Kakao chat styles */
+  .kakao-profile {
+    @apply w-10 h-10 rounded-full flex items-center justify-center text-2xl;
+  }
+  
+  .kakao-chat-bubble {
+    @apply px-4 py-2 rounded-2xl max-w-xs text-sm;
+  }
+  
+  .kakao-chat-time {
+    @apply text-xs text-gray-500 whitespace-nowrap;
+  }
+  
+  .kakao-input {
+    @apply w-full px-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#FEE500];
+  }
+  
+  /* Chat bubble animations */
+  .chat-bubble-enter {
+    animation: bubbleEnter 0.3s ease-out;
+  }
+  
+  @keyframes bubbleEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.8) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  /* Typing indicator */
+  .typing-indicator {
+    @apply flex space-x-1;
+  }
+  
+  .typing-dot {
+    @apply w-2 h-2 bg-gray-400 rounded-full animate-bounce;
+  }
+}
