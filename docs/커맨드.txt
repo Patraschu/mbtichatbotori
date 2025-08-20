@@ -17,7 +17,7 @@ http://localhost:3000
 npm run dev
 
 git add .
-git commit -m "체크포인트1"
+git commit -m "롤백포인트"
 git push origin main
 
 다른 컴퓨터에서 커밋을 완료했고
@@ -116,3 +116,7 @@ npm run rss
 npx next-sitemap
 
 http://localhost:5555
+
+ultrathink, sequential thinking, context7, supabase, exa를 사용해.
+1. 대화 중간에서도 똑같은 오류가 뜸.
+2. 더미 메세지로 대체되면 모델이 대화 맥락을 찾지 못함.

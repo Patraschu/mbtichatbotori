@@ -387,10 +387,42 @@ ${isDeveloperMode ? `- [개발자 모드] 실시간으로 느낀 점을 공유�
     // Chat history for context - 최근 20개 메시지만 유지
     const maxHistoryLength = 20;
     const recentMessages = messages.slice(Math.max(0, messages.length - maxHistoryLength - 1), -1);
-    let history = recentMessages.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }],
-    }));
+    
+    // 히스토리를 user/model 교대 패턴으로 재구성
+    let processedHistory: Array<{ role: string, parts: Array<{ text: string }> }> = [];
+    let lastRole: string | null = null;
+    let accumulatedText = '';
+    
+    for (const msg of recentMessages) {
+      const currentRole = msg.sender === 'user' ? 'user' : 'model';
+      
+      if (lastRole === null) {
+        // 첫 메시지
+        lastRole = currentRole;
+        accumulatedText = msg.content;
+      } else if (lastRole === currentRole) {
+        // 같은 역할의 연속된 메시지 - 병합
+        accumulatedText += '\n' + msg.content;
+      } else {
+        // 역할이 바뀜 - 이전 메시지 저장
+        processedHistory.push({
+          role: lastRole,
+          parts: [{ text: accumulatedText }]
+        });
+        lastRole = currentRole;
+        accumulatedText = msg.content;
+      }
+    }
+    
+    // 마지막 메시지 처리
+    if (lastRole && accumulatedText) {
+      processedHistory.push({
+        role: lastRole,
+        parts: [{ text: accumulatedText }]
+      });
+    }
+    
+    let history = processedHistory;
 
     console.log('=== Complete Message History ===');
     console.log('Total messages:', messages.length);
@@ -532,35 +564,50 @@ ${recentContext}
     }
 
     // Gemini API는 user 메시지로 시작해야 함
-    // 외향형의 선톡(model)으로 시작하는 경우 처리
+    // 히스토리가 model로 시작하는 경우 처리
     if (history.length > 0 && history[0].role === 'model') {
-      console.log('Conversation starts with bot message (extrovert greeting)');
-      // 시스템 프롬프트에 첫 메시지 컨텍스트 추가
+      console.log('Conversation starts with bot message - moving to system prompt');
       const firstBotMessage = history[0].parts[0].text;
-      history = history.slice(1); // 첫 번째 봇 메시지 제거
       
-      // 시스템 프롬프트에 이전 대화 맥락 추가
+      // 첫 봇 메시지를 시스템 프롬프트에 포함
       systemPrompt = `${systemPrompt}\n\n[이전 대화 맥락]\n당신이 먼저 "${firstBotMessage}"라고 말을 걸었습니다. 이 맥락을 기억하고 자연스럽게 대화를 이어가세요.`;
+      
+      // 첫 번째 봇 메시지 제거
+      history = history.slice(1);
     }
-
+    
+    // user/model 교대 패턴 보장
+    // Gemini API는 정확히 user/model/user/model 순서를 요구함
+    let finalHistory: Array<{ role: string, parts: Array<{ text: string }> }> = [];
+    let expectedRole = 'user';
+    
+    for (const msg of history) {
+      if (msg.role === expectedRole) {
+        // 예상된 역할이면 그대로 추가
+        finalHistory.push(msg);
+        expectedRole = expectedRole === 'user' ? 'model' : 'user';
+      } else if (finalHistory.length > 0) {
+        // 예상과 다른 역할이면 이전 메시지와 병합
+        const lastMsg = finalHistory[finalHistory.length - 1];
+        lastMsg.parts[0].text += '\n' + msg.parts[0].text;
+      } else if (msg.role === 'model') {
+        // 첫 메시지가 model인 경우 시스템 프롬프트에 추가
+        systemPrompt += `\n\n[추가 맥락]\n당신: "${msg.parts[0].text}"`;
+      }
+    }
+    
+    history = finalHistory;
+    
     // History 상태 확인
-    if (history.length === 0) {
-      console.log('No history available, starting fresh conversation');
-    } else {
-      console.log('=== Gemini API Call Details ===');
-      console.log('History for API (excluding current message):', history.length, 'messages');
-      console.log('History messages:', history.map((h, i) => ({
-        index: i,
-        role: h.role,
-        content: h.parts[0].text.substring(0, 30)
-      })));
-      console.log('Current message to send:', {
-        role: 'user',
-        content: latestUserMessage.content,
-        fullMessage: latestUserMessage
-      });
-      console.log('================================');
-    }
+    console.log('=== Gemini API Call Details ===');
+    console.log('Processed history length:', history.length);
+    console.log('History pattern check:', history.map((h, i) => ({
+      index: i,
+      role: h.role,
+      preview: h.parts[0].text.substring(0, 30)
+    })));
+    console.log('Current message:', latestUserMessage.content.substring(0, 50));
+    console.log('================================');
 
     // Start chat with history and system instruction
     const chat = model.startChat({
