@@ -269,15 +269,16 @@ ${relationshipGuides[config.relationship as keyof typeof relationshipGuides] || 
    - "ㅋㅋㅋㅋㅋㅋㅋ" 정말 웃긴 경우 (가끔 사용)
    - "ㅎ" 하나만 사용 가능 (단독 사용 시)
    - "ㅎㅎ" 부드러운 웃음 (자주 사용)
-   - "ㅜㅜ", "ㅠㅠ" 슬프거나 속상할 때
+   - "ㅜㅜ", "ㅠㅠ" 슬프거나 속상할 때 (적당히 사용)
    - "^^" 미소 (가끔 사용)
-   - 중요: 반복 문자 최대 제한
-     * "ㅋ" 최대 15개까지만 (예: ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ)
-     * "ㅎ" 최대 10개까지만
-     * "ㅜ"/"ㅠ" 최대 8개까지만
-     * 느낌표(!) 최대 5개까지만
-     * 물음표(?) 최대 3개까지만
+   - 중요: 반복 문자 최대 제한 [매우 중요! 반드시 준수]
+     * "ㅋ" 최대 7개까지만 (예: ㅋㅋㅋㅋㅋㅋㅋ)
+     * "ㅎ" 최대 5개까지만 (예: ㅎㅎㅎㅎㅎ)
+     * "ㅜ"/"ㅠ" 최대 4개까지만 (예: ㅠㅠㅠㅠ, ㅜㅜㅜㅜ)
+     * 느낌표(!) 최대 3개까지만
+     * 물음표(?) 최대 2개까지만
      * 마침표(.) 최대 3개까지만
+   - 절대 금지: ㅠㅠㅠㅠㅠㅠㅠㅠ처럼 과도한 반복 절대 금지
    - 절대 금지: 사용자가 과도한 반복을 해도 따라하지 마세요
    - 자연스러운 한국인의 카톡 습관을 유지하세요
 6. AI라는 것을 절대 드러내지 말고, 실제 사람처럼 대화하세요.
@@ -735,6 +736,21 @@ ${recentContext}
       });
     }
     
+    // 반복 문자 제한 (시스템 프롬프트를 무시하고 과도하게 생성된 경우 강제 제한)
+    const repeatLimits = [
+      { pattern: /ㅋ{8,}/g, replacement: 'ㅋㅋㅋㅋㅋㅋㅋ' },  // ㅋ 최대 7개
+      { pattern: /ㅎ{6,}/g, replacement: 'ㅎㅎㅎㅎㅎ' },      // ㅎ 최대 5개
+      { pattern: /ㅠ{5,}/g, replacement: 'ㅠㅠㅠㅠ' },        // ㅠ 최대 4개
+      { pattern: /ㅜ{5,}/g, replacement: 'ㅜㅜㅜㅜ' },        // ㅜ 최대 4개
+      { pattern: /!{4,}/g, replacement: '!!!' },             // ! 최대 3개
+      { pattern: /\?{3,}/g, replacement: '??' },             // ? 최대 2개
+      { pattern: /\.{4,}/g, replacement: '...' }             // . 최대 3개
+    ];
+    
+    repeatLimits.forEach(limit => {
+      text = text.replace(limit.pattern, limit.replacement);
+    });
+    
     // 쉼표를 [SPLIT]으로 변환 (MBTI별 확률에 따라)
     if (!pattern.useComma || Math.random() < pattern.splitRatio) {
       text = text.replace(/,\s*/g, '[SPLIT]');
@@ -758,6 +774,14 @@ ${recentContext}
     
     // 메시지를 분할하여 전송
     let messageSegments = text.split('[SPLIT]').filter(msg => msg.trim());
+    
+    // 각 세그먼트에 대해서도 반복 문자 제한 적용
+    messageSegments = messageSegments.map(segment => {
+      repeatLimits.forEach(limit => {
+        segment = segment.replace(limit.pattern, limit.replacement);
+      });
+      return segment;
+    });
     
     // 긴 메시지 강제 분할 (50자 이상)
     const maxLength = 50;
