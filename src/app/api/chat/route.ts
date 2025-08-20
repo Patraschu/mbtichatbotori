@@ -224,9 +224,9 @@ export async function POST(req: NextRequest) {
     let systemPrompt = `[핵심 규칙 - 반드시 준수]
 1. 이모지 절대 사용 금지 (😊, 👍, ⏰, 🤔 등 모든 이모지)
 2. 메시지는 반드시 [SPLIT]으로 분할하여 자연스럽게 나누기
-   - 한 메시지는 최대 50자를 넘지 않기
-   - 2-3문장마다 반드시 [SPLIT] 사용
-   - 긴 생각은 여러 메시지로 나눠서 표현
+   - 한 메시지는 20-80자 사이로 유지
+   - 너무 짧은 메시지(한 두 단어)는 다음 문장과 합쳐서 보내기
+   - 의미 단위로 자연스럽게 나누기
 3. 시간은 "오전/오후 X시 X분" 형식으로 정확히 표시
 
 당신은 ${config.mbti} 성격 유형을 가진 ${config.gender === 'male' ? '남성' : '여성'}입니다.
@@ -379,9 +379,9 @@ ${isDeveloperMode ? `- [개발자 모드] 실시간으로 느낀 점을 공유�
 
 [중요! 메시지 분할 필수]
 - 반드시 [SPLIT]을 사용하여 메시지를 여러 개로 나누세요
-- 한 메시지는 절대 50자를 넘기지 마세요
-- 긴 대화는 5-10개의 짧은 메시지로 나누세요
-- "ㅋㅋㅋ" 같은 웃음도 별도 메시지로 분리 가능
+- 한 메시지는 20-80자 사이로 자연스럽게
+- 너무 짧은 메시지는 다음 문장과 합쳐서 보내기
+- "ㅋㅋㅋ" 같은 웃음은 짧아도 다른 내용과 함께 보내기
 - 짧게 끊어서 보내는 것이 자연스러운 카톡 스타일입니다
 - 예시: "아 진짜?[SPLIT]나도 그거 봤는데[SPLIT]개웃기더라[SPLIT]ㅋㅋㅋㅋㅋㅋㅋ"
 
@@ -788,37 +788,81 @@ ${recentContext}
       return segment;
     });
     
-    // 긴 메시지 강제 분할 (50자 이상)
-    const maxLength = 50;
+    // 이모지 제거
+    messageSegments = messageSegments.map(segment => {
+      // 이모지 패턴 제거 (유니코드 범위)
+      return segment.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '');
+    });
+    
+    // 메시지 길이 조정 (20-80자)
+    const minLength = 20;
+    const maxLength = 80;
     const finalSegments: string[] = [];
+    let accumulatedSegment = '';
     
     for (const segment of messageSegments) {
-      if (segment.length <= maxLength) {
-        finalSegments.push(segment);
-      } else {
-        // 긴 메시지를 강제로 분할
-        const words = segment.split(' ');
-        let currentSegment = '';
-        
-        for (const word of words) {
-          if ((currentSegment + ' ' + word).length > maxLength && currentSegment) {
-            finalSegments.push(currentSegment.trim());
-            currentSegment = word;
-          } else {
-            currentSegment = currentSegment ? currentSegment + ' ' + word : word;
-          }
+      const trimmedSegment = segment.trim();
+      if (!trimmedSegment) continue;
+      
+      // 짧은 메시지는 누적
+      if (trimmedSegment.length < minLength) {
+        if (accumulatedSegment) {
+          accumulatedSegment += ' ' + trimmedSegment;
+        } else {
+          accumulatedSegment = trimmedSegment;
         }
         
-        if (currentSegment) {
-          // 마지막 세그먼트가 여전히 길면 강제 분할
-          if (currentSegment.length > maxLength) {
-            const chunks = currentSegment.match(new RegExp(`.{1,${maxLength}}`, 'g')) || [];
-            finalSegments.push(...chunks);
+        // 누적된 메시지가 최소 길이를 넘으면 추가
+        if (accumulatedSegment.length >= minLength) {
+          if (accumulatedSegment.length <= maxLength) {
+            finalSegments.push(accumulatedSegment);
+            accumulatedSegment = '';
           } else {
-            finalSegments.push(currentSegment.trim());
+            // 너무 길면 적절히 분할
+            const sentences = accumulatedSegment.match(/[^.!?]+[.!?]+/g) || [accumulatedSegment];
+            for (const sentence of sentences) {
+              if (sentence.trim().length > 0) {
+                finalSegments.push(sentence.trim());
+              }
+            }
+            accumulatedSegment = '';
+          }
+        }
+      } else if (trimmedSegment.length <= maxLength) {
+        // 누적된 것이 있으면 함께 처리
+        if (accumulatedSegment && (accumulatedSegment + ' ' + trimmedSegment).length <= maxLength) {
+          finalSegments.push(accumulatedSegment + ' ' + trimmedSegment);
+          accumulatedSegment = '';
+        } else {
+          if (accumulatedSegment) {
+            finalSegments.push(accumulatedSegment);
+          }
+          finalSegments.push(trimmedSegment);
+          accumulatedSegment = '';
+        }
+      } else {
+        // 너무 긴 메시지는 문장 단위로 분할
+        if (accumulatedSegment) {
+          finalSegments.push(accumulatedSegment);
+          accumulatedSegment = '';
+        }
+        const sentences = trimmedSegment.match(/[^.!?]+[.!?]+/g) || [trimmedSegment];
+        for (const sentence of sentences) {
+          const trimmed = sentence.trim();
+          if (trimmed.length > maxLength) {
+            // 여전히 너무 긴 경우 강제 분할
+            const chunks = trimmed.match(new RegExp(`.{1,${maxLength}}`, 'g')) || [];
+            finalSegments.push(...chunks);
+          } else if (trimmed.length > 0) {
+            finalSegments.push(trimmed);
           }
         }
       }
+    }
+    
+    // 마지막 누적된 메시지 처리
+    if (accumulatedSegment) {
+      finalSegments.push(accumulatedSegment);
     }
     
     messageSegments = finalSegments;
